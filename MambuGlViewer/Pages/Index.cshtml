@@ -1,0 +1,22 @@
+﻿@page
+@model MambuGLViewer.Pages.IndexModel
+@{
+    ViewData["Title"] = "Upload Transactions";
+}
+
+<h1>Upload Transactions</h1>
+
+<form method="post" enctype="multipart/form-data">
+    <div class="form-group">
+        <label for="jsonFile">Upload JSON File:</label>
+        <input type="file" class="form-control" id="jsonFile" name="jsonFile" accept=".json" />
+    </div>
+    <button type="submit" class="btn btn-primary mt-2">Upload</button>
+</form>
+
+@if (Model.IsUploaded)
+{
+    <div class="alert alert-success mt-3">
+        <strong>Success!</strong> Uploaded @Model.RecordCount records.
+    </div>
+}

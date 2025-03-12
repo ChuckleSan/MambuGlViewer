@@ -1,0 +1,40 @@
+﻿@page
+@model MambuGlViewer.Pages.GLSummaryModel
+@{
+    ViewData["Title"] = "GL Summary";
+}
+
+<h1>GL Summary</h1>
+
+@if (Model.Transactions.Any())
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Account Key</th>
+                <th>Currency</th>
+                <th>GL Code</th>
+                <th>GL Name</th>
+                <th>Total Debits</th>
+                <th>Total Credits</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var group in Model.GLAccountSummaries)
+            {
+                <tr>
+                    <td>@group.AccountKey</td>
+                    <td>@group.CurrencyCode</td>
+                    <td>@group.GLCode</td>
+                    <td>@group.GLName</td>
+                    <td>@group.TotalDebits.ToString("N2")</td>
+                    <td>@group.TotalCredits.ToString("N2")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>No transactions uploaded yet. Please upload a file on the <a asp-page="/Index">Upload page</a>.</p>
+}

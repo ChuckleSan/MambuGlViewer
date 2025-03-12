@@ -1,0 +1,34 @@
+﻿@page
+@model MambuGlViewer.Pages.EditDatesModel
+@{
+    ViewData["Title"] = "Edit Dates";
+}
+
+<h1>Edit Transaction Dates</h1>
+
+@if (Model.Transactions.Any())
+{
+    <form method="post">
+        <div class="form-group">
+            <label for="newBookingDate">New Booking Date (YYYY-MM-DD HH:MM:SS):</label>
+            <input type="text" class="form-control" id="newBookingDate" name="newBookingDate" value="@Model.NewBookingDate" placeholder="e.g., 2025-03-01 08:00:00" />
+        </div>
+        <div class="form-group">
+            <label for="newCreationDate">New Creation Date (YYYY-MM-DD HH:MM:SS):</label>
+            <input type="text" class="form-control" id="newCreationDate" name="newCreationDate" value="@Model.NewCreationDate" placeholder="e.g., 2025-03-01 08:00:00" />
+        </div>
+        <button type="submit" class="btn btn-primary mt-2">Update Dates</button>
+    </form>
+
+    @if (Model.IsUpdated)
+    {
+        <div class="alert alert-success mt-3">
+            <strong>Dates Updated!</strong> Download the modified file below:
+            <a asp-page-handler="Download" class="btn btn-success btn-sm mt-2">Download JSON</a>
+        </div>
+    }
+}
+else
+{
+    <p>No transactions uploaded yet. Please upload a file on the <a asp-page="/Index">Upload page</a>.</p>
+}
