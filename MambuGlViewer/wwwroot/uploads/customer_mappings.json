@@ -1,0 +1,14 @@
+[
+  {
+    "CustomerEncodedKey": "8a194af28f517cbd018f527e1bfc3b67",
+    "BranchKey": "8a195893895f9a4301896850ec87503e",
+    "EurMainAccountKey": "8a194a3692fa91d90192fbefdb987a70",
+    "UsdMainAccountKey": "8a195edd93903b1f0193912273297053"
+  },
+  {
+    "CustomerEncodedKey": "8a19214d92f5288e0192f62b753a4f50",
+    "BranchKey": "8a195893895f9a4301896850ec87503e",
+    "EurMainAccountKey": "8a194d35938fde80019390764e632278",
+    "UsdMainAccountKey": "8a192a079391688a0193921daeb07b21"
+  }
+]
