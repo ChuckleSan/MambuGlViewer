@@ -1,0 +1,47 @@
+﻿@page
+<!-- "{glCode}" -->
+@model MambuGlViewer.Pages.GLDetailsModel
+@{
+    ViewData["Title"] = $"GL Details - {Model.GLCode}";
+}
+
+<h1>GL Details for @Model.GLCode</h1>
+
+<p><a asp-page="/GLSummary">Back to GL Summary</a></p>
+
+@if (Model.Transactions.Any())
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Transaction ID</th>
+                <th>Account Type</th>
+                <th>GL Code</th>
+                <th>GL Name</th>
+                <th>GL Type</th>
+                <th>Booking Date</th>
+                <th>Amount</th>
+                <th>Entry ID</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var tx in Model.Transactions)
+            {
+                <tr>
+                    <td>@tx.transactionId</td>
+                    <td>@(Model.IsMainAccount(tx.accountKey) ? "Main Account" : "Card Sub-Account")</td>
+                    <td>@tx.glAccount.glCode</td>
+                    <td>@tx.glAccount.name</td>
+                    <td>@tx.glAccount.type</td>
+                    <td>@tx.bookingDate.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                    <td>@tx.amount.ToString("N3")</td>
+                    <td>@tx.entryID</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>No transactions found for GL Code: @Model.GLCode</p>
+}
