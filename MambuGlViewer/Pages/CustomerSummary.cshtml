@@ -7,7 +7,7 @@
 <h1>Customer Summary</h1>
 
 <h2>Define Customer Mappings</h2>
-<form method="post">
+<form method="post" asp-page-handler="Add">
     <div class="form-group">
         <label for="customerEncodedKey">Customer Encoded Key:</label>
         <input type="text" class="form-control" id="customerEncodedKey" name="customerEncodedKey" placeholder="e.g., 8a194af28f517cbd018f527e1bfc3b67" />
@@ -29,6 +29,10 @@
     @foreach (var customer in Model.CustomerSummaries)
     {
         <h3>Customer: @customer.CustomerEncodedKey (Branch: @customer.BranchKey)</h3>
+        <form method="post" asp-page-handler="Remove" class="mb-3">
+            <input type="hidden" name="customerEncodedKey" value="@customer.CustomerEncodedKey" />
+            <button type="submit" class="btn btn-danger btn-sm">Remove Customer</button>
+        </form>
 
         <h4>Main Accounts</h4>
         <table class="table table-striped">

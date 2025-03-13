@@ -26,7 +26,7 @@ namespace MambuGlViewer.Pages
             CalculateSummaries();
         }
 
-        public IActionResult OnPost(string customerEncodedKey, string eurMainAccountKey, string usdMainAccountKey)
+        public IActionResult OnPostAdd(string customerEncodedKey, string eurMainAccountKey, string usdMainAccountKey)
         {
             if (!string.IsNullOrWhiteSpace(customerEncodedKey) &&
                 (!string.IsNullOrWhiteSpace(eurMainAccountKey) || !string.IsNullOrWhiteSpace(usdMainAccountKey)))
@@ -39,24 +39,38 @@ namespace MambuGlViewer.Pages
                     (usdMainAccountKey != null && allMainAccounts.Contains(usdMainAccountKey)))
                 {
                     ModelState.AddModelError("", "An account key is already assigned as a main account for another customer.");
-                    LoadTransactions();
-                    LoadCustomerMappings();
-                    CalculateSummaries();
-                    return Page();
                 }
-
-                mappings.Add(new CustomerMapping
+                else
                 {
-                    CustomerEncodedKey = customerEncodedKey,
-                    BranchKey = "8a195893895f9a4301896850ec87503e",
-                    EurMainAccountKey = eurMainAccountKey ?? "",
-                    UsdMainAccountKey = usdMainAccountKey ?? ""
-                });
-                SaveCustomerMappings(mappings);
+                    mappings.Add(new CustomerMapping
+                    {
+                        CustomerEncodedKey = customerEncodedKey,
+                        BranchKey = "8a195893895f9a4301896850ec87503e",
+                        EurMainAccountKey = eurMainAccountKey ?? "",
+                        UsdMainAccountKey = usdMainAccountKey ?? ""
+                    });
+                    SaveCustomerMappings(mappings);
+                }
             }
             else
             {
                 ModelState.AddModelError("", "Customer Encoded Key and at least one main account key are required.");
+            }
+
+            LoadTransactions();
+            LoadCustomerMappings();
+            CalculateSummaries();
+            return Page();
+        }
+
+        public IActionResult OnPostRemove(string customerEncodedKey)
+        {
+            var mappings = LoadCustomerMappingsRaw();
+            var customerToRemove = mappings.FirstOrDefault(c => c.CustomerEncodedKey == customerEncodedKey);
+            if (customerToRemove != null)
+            {
+                mappings.Remove(customerToRemove);
+                SaveCustomerMappings(mappings);
             }
 
             LoadTransactions();
@@ -74,10 +88,9 @@ namespace MambuGlViewer.Pages
                     .Where(k => !string.IsNullOrEmpty(k))
                     .ToHashSet();
 
-                // Identify internal transfers (same transactionId, different accountKeys within a customer's set)
                 var transactionsById = Transactions
                     .GroupBy(t => t.transactionId)
-                    .Where(g => g.Count() > 1) // Only groups with multiple entries could be transfers
+                    .Where(g => g.Count() > 1)
                     .ToDictionary(
                         g => g.Key,
                         g => g.Select(t => new { t.accountKey, t.type, t.amount }).ToList()
@@ -90,7 +103,6 @@ namespace MambuGlViewer.Pages
                             new[] { c.EurMainAccountKey, c.UsdMainAccountKey }.Where(k => !string.IsNullOrEmpty(k))
                         );
 
-                        // Add all sub-account keys for this customer from transactions
                         var subAccountKeys = Transactions
                             .Where(t => !allMainAccountKeys.Contains(t.accountKey) &&
                                         (t.glAccount.currency.currencyCode == "EUR" && c.EurMainAccountKey != null ||
@@ -100,22 +112,21 @@ namespace MambuGlViewer.Pages
                             .ToHashSet();
                         customerAccountKeys.UnionWith(subAccountKeys);
 
-                        // Filter out internal transfers for this customer's accounts
                         var externalTransactions = Transactions
                             .Where(t => customerAccountKeys.Contains(t.accountKey))
                             .GroupBy(t => t.transactionId)
                             .SelectMany(g =>
                             {
                                 var group = g.ToList();
-                                if (group.Count == 2 && // Assuming paired DEBIT/CREDIT for transfers
+                                if (group.Count == 2 &&
                                     group.Any(t => t.type == "DEBIT") && group.Any(t => t.type == "CREDIT") &&
-                                    group[0].amount == group[1].amount && // Balanced transfer
+                                    group[0].amount == group[1].amount &&
                                     customerAccountKeys.Contains(group[0].accountKey) &&
                                     customerAccountKeys.Contains(group[1].accountKey))
                                 {
-                                    return new List<Transaction>(); // Exclude internal transfer
+                                    return new List<Transaction>();
                                 }
-                                return group; // Keep external or unbalanced transactions
+                                return group;
                             })
                             .ToList();
 
