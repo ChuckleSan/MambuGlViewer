@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-using MambuGLViewer.Models; // Ensure this is included
+using MambuGLViewer.Models;
 
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
@@ -9,10 +9,9 @@ namespace MambuGlViewer.Pages
     public class GLSummaryModel : PageModel
     {
         public List<Transaction> Transactions { get; set; } = new List<Transaction>();
-        public List<GLAccountSummary> GLAccountSummaries { get; set; } = new List<GLAccountSummary>();
+        public List<GLSummary> GLSummaries { get; set; } = new List<GLSummary>();
 
         private readonly IWebHostEnvironment _environment;
-        private List<CustomerMapping> _customerMappings;
 
         public GLSummaryModel(IWebHostEnvironment environment)
         {
@@ -22,40 +21,28 @@ namespace MambuGlViewer.Pages
         public void OnGet()
         {
             LoadTransactions();
-            LoadCustomerMappings();
             if (Transactions.Any())
             {
-                GLAccountSummaries = Transactions
+                GLSummaries = Transactions
                     .GroupBy(t => new
                     {
-                        t.glAccount.currency.currencyCode, // Group by currency first
-                        t.accountKey,                      // Then by accountKey
                         t.glAccount.glCode,
-                        t.glAccount.name
+                        t.glAccount.name,
+                        t.glAccount.type
                     })
-                    .Select(g => new GLAccountSummary
+                    .Select(g => new GLSummary
                     {
-                        CurrencyCode = g.Key.currencyCode,
-                        AccountKey = g.Key.accountKey,
                         GLCode = g.Key.glCode,
                         GLName = g.Key.name,
+                        Type = g.Key.type,
                         TotalDebits = g.Where(t => t.type == "DEBIT").Sum(t => t.amount),
-                        TotalCredits = g.Where(t => t.type == "CREDIT").Sum(t => t.amount)
+                        TotalCredits = g.Where(t => t.type == "CREDIT").Sum(t => t.amount),
+                        Balance = g.Where(t => t.type == "CREDIT").Sum(t => t.amount) -
+                                 g.Where(t => t.type == "DEBIT").Sum(t => t.amount)
                     })
-                    .OrderBy(s => s.CurrencyCode)  // Sort by currency first
-                    .ThenBy(s => s.AccountKey)     // Then by accountKey
-                    .ThenBy(s => s.GLCode)
+                    .OrderBy(s => s.GLCode)
                     .ToList();
             }
-        }
-
-        public bool IsMainAccount(string accountKey)
-        {
-            if (_customerMappings == null || !_customerMappings.Any())
-            {
-                return false; // Default to sub-account if no mappings
-            }
-            return _customerMappings.Any(c => c.EurMainAccountKey == accountKey || c.UsdMainAccountKey == accountKey);
         }
 
         private void LoadTransactions()
@@ -66,7 +53,9 @@ namespace MambuGlViewer.Pages
                 try
                 {
                     string json = System.IO.File.ReadAllText(filePath);
-                    Transactions = JsonSerializer.Deserialize<List<Transaction>>(json) ?? new List<Transaction>();
+                    Transactions = JsonSerializer.Deserialize<List<Transaction>>(json,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+                        ?? new List<Transaction>();
                 }
                 catch (Exception ex)
                 {
@@ -76,46 +65,19 @@ namespace MambuGlViewer.Pages
             }
         }
 
-        private void LoadCustomerMappings()
-        {
-            string filePath = GetCustomerMappingsFilePath();
-            if (System.IO.File.Exists(filePath))
-            {
-                try
-                {
-                    string json = System.IO.File.ReadAllText(filePath);
-                    _customerMappings = JsonSerializer.Deserialize<List<CustomerMapping>>(json) ?? new List<CustomerMapping>();
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error loading customer mappings: {ex.Message}");
-                    _customerMappings = new List<CustomerMapping>();
-                }
-            }
-            else
-            {
-                _customerMappings = new List<CustomerMapping>();
-            }
-        }
-
         private string GetTransactionsFilePath()
         {
             return Path.Combine(_environment.WebRootPath, "uploads", "transactions.json");
         }
-
-        private string GetCustomerMappingsFilePath()
-        {
-            return Path.Combine(_environment.WebRootPath, "uploads", "customer_mappings.json");
-        }
     }
 
-    public class GLAccountSummary
+    public class GLSummary
     {
-        public string CurrencyCode { get; set; }
-        public string AccountKey { get; set; }
-        public string GLCode { get; set; }
-        public string GLName { get; set; }
+        public string GLCode { get; set; } = string.Empty;
+        public string GLName { get; set; } = string.Empty;
+        public string Type { get; set; } = string.Empty;
         public decimal TotalDebits { get; set; }
         public decimal TotalCredits { get; set; }
+        public decimal Balance { get; set; }
     }
 }
