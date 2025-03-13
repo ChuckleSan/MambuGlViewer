@@ -1,0 +1,42 @@
+﻿@page
+@model MambuGlViewer.Pages.AccountTransactionsModel
+@{
+    ViewData["Title"] = "Account Transactions";
+}
+
+<h1>Transactions for Account: @Model.AccountKey</h1>
+
+@if (Model.Transactions.Any())
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Entry ID</th>
+                <th>Transaction ID</th>
+                <th>GL Code</th>
+                <th>GL Name</th>
+                <th>Booking Date</th>
+                <th>Account Key</th>
+                <th>Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var transaction in Model.Transactions)
+            {
+                <tr style="cursor: pointer;" onclick="window.location.href='/AccountTransactions?accountKey=@Model.AccountKey&transactionId=@transaction.TransactionID'">
+                    <td>@transaction.EntryID</td>
+                    <td>@transaction.TransactionID</td>
+                    <td>@transaction.GLCode</td>
+                    <td>@transaction.GLName</td>
+                    <td>@transaction.BookingDate.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                    <td>@transaction.AccountKey</td>
+                    <td>@transaction.SignedAmount.ToString("N2")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>No transactions found for Account Key: @Model.AccountKey. Return to <a asp-page="/CustomerSummary">Customer Summary</a>.</p>
+}
