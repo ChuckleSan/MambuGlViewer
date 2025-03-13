@@ -1,0 +1,87 @@
+﻿@page
+@model MambuGlViewer.Pages.CustomerSummaryModel
+@{
+    ViewData["Title"] = "Customer Summary";
+}
+
+<h1>Customer Summary</h1>
+
+<h2>Define Customer Mappings</h2>
+<form method="post">
+    <div class="form-group">
+        <label for="customerEncodedKey">Customer Encoded Key:</label>
+        <input type="text" class="form-control" id="customerEncodedKey" name="customerEncodedKey" placeholder="e.g., 8a194af28f517cbd018f527e1bfc3b67" />
+    </div>
+    <div class="form-group">
+        <label for="eurMainAccountKey">EUR Main Account Key:</label>
+        <input type="text" class="form-control" id="eurMainAccountKey" name="eurMainAccountKey" placeholder="e.g., 8a194a3692fa91d90192fbefdb987a70" />
+    </div>
+    <div class="form-group">
+        <label for="usdMainAccountKey">USD Main Account Key:</label>
+        <input type="text" class="form-control" id="usdMainAccountKey" name="usdMainAccountKey" placeholder="e.g., 8a195edd93903b1f0193912273297053" />
+    </div>
+    <button type="submit" class="btn btn-primary mt-2">Add Customer</button>
+</form>
+
+@if (Model.CustomerSummaries.Any())
+{
+    <h2 class="mt-4">Customer Summaries</h2>
+    @foreach (var customer in Model.CustomerSummaries)
+    {
+        <h3>Customer: @customer.CustomerEncodedKey (Branch: @customer.BranchKey)</h3>
+
+        <h4>Main Accounts</h4>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Account Key</th>
+                    <th>Currency</th>
+                    <th>Total Debits</th>
+                    <th>Total Credits</th>
+                    <th>Value at End</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var account in customer.MainAccounts)
+                {
+                    <tr style="cursor: pointer;" onclick="window.location.href='/AccountTransactions?accountKey=@account.AccountKey'">
+                        <td>@account.AccountKey</td>
+                        <td>@account.CurrencyCode</td>
+                        <td>@account.TotalDebits.ToString("N2")</td>
+                        <td>@account.TotalCredits.ToString("N2")</td>
+                        <td>@account.ValueAtEnd.ToString("N2")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <h4>Card Sub-Accounts</h4>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Account Key</th>
+                    <th>Currency</th>
+                    <th>Total Debits</th>
+                    <th>Total Credits</th>
+                    <th>Value at End</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var card in customer.CardAccounts)
+                {
+                    <tr style="cursor: pointer;" onclick="window.location.href='/AccountTransactions?accountKey=@card.AccountKey'">
+                        <td>@card.AccountKey</td>
+                        <td>@card.CurrencyCode</td>
+                        <td>@card.TotalDebits.ToString("N2")</td>
+                        <td>@card.TotalCredits.ToString("N2")</td>
+                        <td>@card.ValueAtEnd.ToString("N2")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+}
+else
+{
+    <p class="mt-3">No customer mappings defined yet, or no transactions uploaded. Please upload a file on the <a asp-page="/Index">Upload page</a> and add customer mappings above.</p>
+}
