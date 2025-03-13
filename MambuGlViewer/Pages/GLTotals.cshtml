@@ -12,6 +12,7 @@
         <thead>
             <tr>
                 <th>GL Code</th>
+                <th>Type</th>
                 <th>GL Name</th>
                 <th>Type</th>
                 <th>Currency</th>
@@ -25,6 +26,7 @@
             {
                 <tr>
                     <td>@account.GLCode</td>
+                    <td>@(Model.IsMainAccount(account.AccountKey) ? "Main Account" : "Card Sub-Account")</td>
                     <td>@account.GLName</td>
                     <td>@account.Type</td>
                     <td>@account.CurrencyCode</td>

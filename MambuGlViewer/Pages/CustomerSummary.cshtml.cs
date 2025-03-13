@@ -259,12 +259,4 @@ namespace MambuGlViewer.Pages
         public decimal TotalCredits { get; set; }
         public decimal ValueAtEnd { get; set; }
     }
-
-    public class CustomerMapping
-    {
-        public string CustomerEncodedKey { get; set; }
-        public string BranchKey { get; set; }
-        public string EurMainAccountKey { get; set; }
-        public string UsdMainAccountKey { get; set; }
-    }
 }

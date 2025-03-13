@@ -26,13 +26,13 @@
             <tr>
                 <th>Transaction ID</th>
                 <th>Account Key</th>
+                <th>Type</th>
                 <th>GL Code</th>
                 <th>GL Name</th>
                 <th>GL Type</th>
                 <th>Booking Date</th>
                 <th>Currency</th>
                 <th>Amount</th>
-                <th>Type</th>
                 <th>Entry ID</th>
             </tr>
         </thead>
@@ -42,13 +42,13 @@
                 <tr>
                     <td>@transaction.transactionId</td>
                     <td>@transaction.accountKey</td>
+                    <td>@(Model.IsMainAccount(transaction.accountKey) ? "Main Account" : "Card Sub-Account")</td>
                     <td>@transaction.glAccount.glCode</td>
                     <td>@transaction.glAccount.name</td>
                     <td>@transaction.glAccount.type</td>
                     <td>@transaction.bookingDate.ToString("yyyy-MM-dd HH:mm:ss")</td>
                     <td>@transaction.glAccount.currency.currencyCode</td>
                     <td>@transaction.amount</td>
-                    <td>@transaction.type</td>
                     <td>@transaction.entryID</td>
                 </tr>
             }
@@ -79,8 +79,4 @@
 
     <!-- Debug Info -->
     <pre>CurrentPage: @Model.CurrentPage, PageSize: @Model.PageSize, TotalPages: @Model.TotalPages, PagedTransactions: @Model.PagedTransactions.Count, Skip: @Model.SkipCount</pre>
-}
-else
-{
-    <p>No transactions uploaded yet. Please upload a file on the <a asp-page="/Index">Upload page</a>.</p>
 }
