@@ -1,22 +1,27 @@
 ﻿@page
-@model MambuGLViewer.Pages.IndexModel
+@model MambuGlViewer.Pages.IndexModel
 @{
-    ViewData["Title"] = "Upload Transactions";
+    ViewData["Title"] = "Upload";
 }
 
 <h1>Upload Transactions</h1>
 
 <form method="post" enctype="multipart/form-data">
     <div class="form-group">
-        <label for="jsonFile">Upload JSON File:</label>
-        <input type="file" class="form-control" id="jsonFile" name="jsonFile" accept=".json" />
+        <label for="file">Select JSON File:</label>
+        <input type="file" class="form-control" id="file" name="file" accept=".json" />
     </div>
     <button type="submit" class="btn btn-primary mt-2">Upload</button>
 </form>
 
-@if (Model.IsUploaded)
+@if (System.IO.File.Exists(Model.GetTransactionsFilePath()))
 {
-    <div class="alert alert-success mt-3">
-        <strong>Success!</strong> Uploaded @Model.RecordCount records.
+    <div class="mt-3">
+        <a asp-page-handler="Download" class="btn btn-secondary">Download Current Transactions</a>
     </div>
+}
+
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-info mt-3">@TempData["Message"]</div>
 }

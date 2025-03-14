@@ -4,31 +4,58 @@
     ViewData["Title"] = "Edit Dates";
 }
 
-<h1>Edit Transaction Dates</h1>
+<h1>Edit Dates</h1>
 
 @if (Model.Transactions.Any())
 {
     <form method="post">
         <div class="form-group">
-            <label for="newBookingDate">New Booking Date (YYYY-MM-DD HH:MM:SS):</label>
-            <input type="text" class="form-control" id="newBookingDate" name="newBookingDate" value="@Model.NewBookingDate" placeholder="e.g., 2025-03-01 08:00:00" />
-        </div>
-        <div class="form-group">
-            <label for="newCreationDate">New Creation Date (YYYY-MM-DD HH:MM:SS):</label>
-            <input type="text" class="form-control" id="newCreationDate" name="newCreationDate" value="@Model.NewCreationDate" placeholder="e.g., 2025-03-01 08:00:00" />
+            <label for="baseDate">New Base Date:</label>
+            <input type="datetime-local" class="form-control" id="baseDate" name="baseDate"
+                   value="@Model.EarliestDate.ToString("yyyy-MM-ddTHH:mm")" />
+            <small class="form-text text-muted">Earliest existing date: @Model.EarliestDate.ToString("yyyy-MM-dd HH:mm:ss")</small>
         </div>
         <button type="submit" class="btn btn-primary mt-2">Update Dates</button>
     </form>
 
-    @if (Model.IsUpdated)
+    @if (Model.HasUpdated)
     {
-        <div class="alert alert-success mt-3">
-            <strong>Dates Updated!</strong> Download the modified file below:
-            <a asp-page-handler="Download" class="btn btn-success btn-sm mt-2">Download JSON</a>
-        </div>
+        <h3 class="mt-4">Updated Transactions</h3>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Entry ID</th>
+                    <th>GL Code</th>
+                    <th>GL Name</th>
+                    <th>New Booking Date</th>
+                    <th>New Creation Date</th>
+                    <th>Amount</th>
+                    <th>Type</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var tx in Model.Transactions)
+                {
+                    <tr>
+                        <td>@tx.entryID</td>
+                        <td>@tx.glAccount.glCode</td>
+                        <td>@tx.glAccount.name</td>
+                        <td>@tx.bookingDate.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                        <td>@tx.creationDate.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                        <td>@tx.amount.ToString("N2")</td>
+                        <td>@tx.type</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
     }
 }
 else
 {
     <p>No transactions uploaded yet. Please upload a file on the <a asp-page="/Index">Upload page</a>.</p>
+}
+
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-info mt-3">@TempData["Message"]</div>
 }

@@ -1,17 +1,14 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
-
 using System.Text.Json;
 
 using MambuGLViewer.Models;
 
-namespace MambuGLViewer.Pages
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+
+namespace MambuGlViewer.Pages
 {
     public class IndexModel : PageModel
     {
-        public bool IsUploaded { get; set; }
-        public int RecordCount { get; set; }
-
         private readonly IWebHostEnvironment _environment;
 
         public IndexModel(IWebHostEnvironment environment)
@@ -21,64 +18,79 @@ namespace MambuGLViewer.Pages
 
         public void OnGet()
         {
-            // Nothing to load on GET
         }
 
-        public IActionResult OnPost(IFormFile jsonFile)
+        public async Task<IActionResult> OnPostAsync(IFormFile file)
         {
-            if (jsonFile != null && jsonFile.Length > 0)
+            if (file == null || file.Length == 0)
             {
-                try
-                {
-                    using var stream = new StreamReader(jsonFile.OpenReadStream());
-                    string jsonContent = stream.ReadToEnd();
-                    var transactions = JsonSerializer.Deserialize<List<Transaction>>(jsonContent);
-
-                    if (transactions != null && transactions.Any())
-                    {
-                        SaveTransactions(transactions);
-                        IsUploaded = true;
-                        RecordCount = transactions.Count;
-                    }
-                    else
-                    {
-                        ModelState.AddModelError("", "No valid transactions found in the file.");
-                    }
-                }
-                catch (JsonException ex)
-                {
-                    ModelState.AddModelError("", $"Invalid JSON format: {ex.Message}");
-                }
-                catch (Exception ex)
-                {
-                    ModelState.AddModelError("", $"Error processing file: {ex.Message}");
-                }
+                TempData["Message"] = "Please select a file to upload.";
+                return Page();
             }
-            else
+
+            if (!file.FileName.EndsWith(".json"))
             {
-                ModelState.AddModelError("", "Please upload a valid JSON file.");
+                TempData["Message"] = "Only JSON files are supported.";
+                return Page();
+            }
+
+            string filePath = GetTransactionsFilePath();
+            try
+            {
+                string uploadsDir = Path.Combine(_environment.WebRootPath, "uploads");
+                if (!Directory.Exists(uploadsDir))
+                {
+                    Directory.CreateDirectory(uploadsDir);
+                }
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                string json = System.IO.File.ReadAllText(filePath);
+                var transactions = JsonSerializer.Deserialize<List<Transaction>>(json,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                if (transactions == null || !transactions.Any())
+                {
+                    TempData["Message"] = "Uploaded file is empty or invalid.";
+                    return Page();
+                }
+
+                TempData["Message"] = "File uploaded successfully.";
+            }
+            catch (Exception ex)
+            {
+                TempData["Message"] = $"Error uploading file: {ex.Message}";
             }
 
             return Page();
         }
 
-        private void SaveTransactions(List<Transaction> transactions)
+        public IActionResult OnGetDownload()
         {
             string filePath = GetTransactionsFilePath();
-            string uploadsDir = Path.GetDirectoryName(filePath);
-            if (!Directory.Exists(uploadsDir))
+            if (!System.IO.File.Exists(filePath))
             {
-                Directory.CreateDirectory(uploadsDir);
+                TempData["Message"] = "No transactions file available to download.";
+                return Page();
             }
 
-            string json = JsonSerializer.Serialize(transactions, new JsonSerializerOptions { WriteIndented = true });
-            System.IO.File.WriteAllText(filePath, json);
+            try
+            {
+                var fileBytes = System.IO.File.ReadAllBytes(filePath);
+                return File(fileBytes, "application/json", "transactions.json");
+            }
+            catch (Exception ex)
+            {
+                TempData["Message"] = $"Error downloading file: {ex.Message}";
+                return Page();
+            }
         }
 
-        private string GetTransactionsFilePath()
+        public string GetTransactionsFilePath()
         {
             return Path.Combine(_environment.WebRootPath, "uploads", "transactions.json");
         }
     }
 }
-

@@ -6,33 +6,29 @@
 
 <h1>GL Totals</h1>
 
-@if (Model.Transactions.Any())
+@if (Model.GLTotals.Any())
 {
     <table class="table table-striped">
         <thead>
             <tr>
                 <th>GL Code</th>
-                <th>Type</th>
                 <th>GL Name</th>
-                <th>Type</th>
-                <th>Currency</th>
-                <th>Total Debits</th>
+                <th>GL Type</th>
                 <th>Total Credits</th>
+                <th>Total Debits</th>
                 <th>Value at End</th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var account in Model.GLAccountTotals)
+            @foreach (var total in Model.GLTotals)
             {
                 <tr>
-                    <td>@account.GLCode</td>
-                    <td>@(Model.IsMainAccount(account.AccountKey) ? "Main Account" : "Card Sub-Account")</td>
-                    <td>@account.GLName</td>
-                    <td>@account.Type</td>
-                    <td>@account.CurrencyCode</td>
-                    <td>@account.TotalDebits.ToString("N2")</td>
-                    <td>@account.TotalCredits.ToString("N2")</td>
-                    <td>@account.ValueAtEnd.ToString("N2")</td>
+                    <td>@total.GLCode</td>
+                    <td>@total.GLName</td>
+                    <td>@total.GLType</td>
+                    <td>@total.TotalCredits.ToString("N2")</td>
+                    <td>@total.TotalDebits.ToString("N2")</td>
+                    <td>@total.ValueAtEnd.ToString("N2")</td>
                 </tr>
             }
         </tbody>

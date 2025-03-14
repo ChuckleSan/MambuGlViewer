@@ -10,11 +10,8 @@ namespace MambuGlViewer.Pages
     public class EditDatesModel : PageModel
     {
         public List<Transaction> Transactions { get; set; } = new List<Transaction>();
-        [BindProperty]
-        public string NewBookingDate { get; set; }
-        [BindProperty]
-        public string NewCreationDate { get; set; }
-        public bool IsUpdated { get; set; }
+        public DateTime EarliestDate { get; set; }
+        public bool HasUpdated { get; set; } = false;
 
         private readonly IWebHostEnvironment _environment;
 
@@ -28,80 +25,36 @@ namespace MambuGlViewer.Pages
             LoadTransactions();
             if (Transactions.Any())
             {
-                // Set default values to first transaction's dates
-                NewBookingDate = Transactions.First().bookingDate.ToString("yyyy-MM-dd");
-                NewCreationDate = Transactions.First().creationDate.ToString("yyyy-MM-dd");
+                EarliestDate = Transactions.Min(t => t.bookingDate);
             }
         }
 
-        public IActionResult OnPost()
+        public IActionResult OnPost(DateTime baseDate)
         {
             LoadTransactions();
-            if (Transactions.Any())
+            if (!Transactions.Any())
             {
-                bool updated = false;
-
-                // Try to parse new booking date (date only)
-                if (!string.IsNullOrWhiteSpace(NewBookingDate) && DateTime.TryParse(NewBookingDate, out DateTime newBookingDateOnly))
-                {
-                    foreach (var transaction in Transactions)
-                    {
-                        // Keep the original time, apply the new date
-                        DateTime originalTime = transaction.bookingDate;
-                        transaction.bookingDate = new DateTime(
-                            newBookingDateOnly.Year,
-                            newBookingDateOnly.Month,
-                            newBookingDateOnly.Day,
-                            originalTime.Hour,
-                            originalTime.Minute,
-                            originalTime.Second,
-                            DateTimeKind.Utc);
-                    }
-                    updated = true;
-                }
-
-                // Try to parse new creation date (date only)
-                if (!string.IsNullOrWhiteSpace(NewCreationDate) && DateTime.TryParse(NewCreationDate, out DateTime newCreationDateOnly))
-                {
-                    foreach (var transaction in Transactions)
-                    {
-                        // Keep the original time, apply the new date
-                        DateTime originalTime = transaction.creationDate;
-                        transaction.creationDate = new DateTime(
-                            newCreationDateOnly.Year,
-                            newCreationDateOnly.Month,
-                            newCreationDateOnly.Day,
-                            originalTime.Hour,
-                            originalTime.Minute,
-                            originalTime.Second,
-                            DateTimeKind.Utc);
-                    }
-                    updated = true;
-                }
-
-                if (updated)
-                {
-                    SaveTransactions();
-                    IsUpdated = true;
-                }
-                else
-                {
-                    ModelState.AddModelError("", "No valid dates provided to update.");
-                }
+                TempData["Message"] = "No transactions to update.";
+                return Page();
             }
+
+            // Step 2: Find earliest date and calculate offset
+            EarliestDate = Transactions.Min(t => t.bookingDate);
+            TimeSpan offset = baseDate - EarliestDate;
+
+            // Step 3: Update dates for each transaction
+            foreach (var tx in Transactions)
+            {
+                tx.bookingDate = tx.bookingDate + offset;
+                tx.creationDate = tx.creationDate + offset;
+            }
+
+            // Save updated transactions back to file
+            SaveTransactions();
+
+            HasUpdated = true;
+            TempData["Message"] = $"Dates updated successfully. Offset applied: {offset.TotalDays} days.";
             return Page();
-        }
-
-        public IActionResult OnGetDownload()
-        {
-            LoadTransactions();
-            if (Transactions.Any())
-            {
-                string json = JsonSerializer.Serialize(Transactions, new JsonSerializerOptions { WriteIndented = true });
-                byte[] fileBytes = System.Text.Encoding.UTF8.GetBytes(json);
-                return File(fileBytes, "application/json", "transactions_modified.json");
-            }
-            return RedirectToPage();
         }
 
         private void LoadTransactions()
@@ -112,7 +65,9 @@ namespace MambuGlViewer.Pages
                 try
                 {
                     string json = System.IO.File.ReadAllText(filePath);
-                    Transactions = JsonSerializer.Deserialize<List<Transaction>>(json) ?? new List<Transaction>();
+                    Transactions = JsonSerializer.Deserialize<List<Transaction>>(json,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+                        ?? new List<Transaction>();
                 }
                 catch (Exception ex)
                 {
@@ -125,8 +80,17 @@ namespace MambuGlViewer.Pages
         private void SaveTransactions()
         {
             string filePath = GetTransactionsFilePath();
-            string json = JsonSerializer.Serialize(Transactions, new JsonSerializerOptions { WriteIndented = true });
-            System.IO.File.WriteAllText(filePath, json);
+            try
+            {
+                string json = JsonSerializer.Serialize(Transactions,
+                    new JsonSerializerOptions { WriteIndented = true });
+                System.IO.File.WriteAllText(filePath, json);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error saving transactions: {ex.Message}");
+                TempData["Message"] = "Error saving updated dates: " + ex.Message;
+            }
         }
 
         private string GetTransactionsFilePath()
