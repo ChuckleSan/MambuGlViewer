@@ -1,0 +1,53 @@
+Imagine that you are an implementation of the Mambu core banking system.  As a core banking system, 100% financial integrity is your core function.  Assume that you have two customers, each with two deposit accounts and with two pre-paid cards linked to each of the accounts; the pre-paid card accounts are just another Mambu account representing the balance on the card.:
+
+Customer 1 assigned to branch 8a195893895f9a4301896850ec87503e, encodedKey = 8a194af28f517cbd018f527e1bfc3b67
+	Account 1: EUR, accountKey = 8a194a3692fa91d90192fbefdb987a70
+	Account 2: USD, accountKey = 8a195edd93903b1f0193912273297053
+	Card 1: EUR, accountKey = 8a194d35938fde80019390764e505989
+	Card 2: EUR, accountKey = 8a194d35938fde80019390764e973242
+	Card 3: USD, accountKey = 8a194d35938fde80019390764e109923
+	Card 4: USD, accountKey = 8a194d35938fde80019390764e505256
+Customer 2 assigned to branch 8a195893895f9a4301896850ec87503e, encodedKey = 8a19214d92f5288e0192f62b753a4f50
+	Account 3: EUR, accountKey = 8a194d35938fde80019390764e632278
+	Account 4: USD, accountKey = 8a192a079391688a0193921daeb07b21
+	Card 5: EUR, accountKey = 8a194d35938fde80019390764e207324
+	Card 6: EUR, accountKey = 8a194d35938fde80019390764e305610
+	Card 7: USD, accountKey = 8a194d35938fde80019390764e401111
+	Card 8: USD, accountKey = 8a194d35938fde80019390764e809125
+
+Your Chart of Accounts has been set up as follows:
+
+56540000 - Savings control (EUR)
+56540001 - Savings control (USD)
+56540100 - AML Suspense account (EUR)
+56540101 - AML Suspense account (USD)
+56540300 - Chargebacks (EUR)
+56540301 - Chargebacks (USD)
+56540400 - Settlement account (EUR)
+56540401 - Settlement account (USD)
+57501000 - Transaction source (EUR) (Bank Account)
+57501010 - Transaction source (USD) (Bank Account)
+70040130 - Currency conversion fee revenue (EUR)
+70040131 - Currency conversion fee revenue (USD)
+70040800 - Chargeback fee revenue (EUR)
+70040801 - Chargeback fee revenue (USD)
+
+When you receive funds into a customer account the accounting flow is:
+1. Debit the bank account / Credit the AML Suspense account
+2. Debit the AML Suspense account / Credit the savings control account
+
+When you fund a card, money is moved from the customer's main account to the card account and the accounting flow is:
+1. Debit the savings control / Credit the savings control
+
+When you spend money on a card the money moves from the card account to the settlement account and the accounting flow is:
+1. Debit the savings control / credit the settlement account
+
+When there's a chargeback the accounting flow is:
+1. Debit the settlement account / credit the chargebacks account
+
+Every time there's a chargeback there is also a disbursement involved, let's make it 15 units for each chargeback and the accounting flow is debit settlement / credit Chargeback fee revenue
+
+A currency conversion fee can happen and the accounting flow is:
+1. Debit savings control / credit Currency conversion fee revenue
+
+Do you understand this?  Do not do anything more until I give you specific instructions, based on the above, and say "go ahead".
