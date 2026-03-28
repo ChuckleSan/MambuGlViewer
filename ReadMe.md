@@ -1,4 +1,4 @@
-<img src="https://github.com/ChuckleSan/MambuGlViewer/blob/master/MambuGlViewer/wwwroot/assets/54721-a4aac1swift-tile.webp" align="right" height="64px" />
+<img src="https://github.com/ChuckleSan/MambuGlViewer/blob/master/MambuGlViewer/wwwroot/assets/Mambu.png" align="right" height="64px" />
 
 # MambuGlViewer
 
